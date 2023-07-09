@@ -20,8 +20,39 @@ def draw_graph(graph):
     plt.savefig("graph.png")
 
 
+def find_shortest_path(graph, src, dst):
+    """Dijkstra used to find the SP from src to dst."""
+
+    return nx.dijkstra_path(graph, source=src, target=dst, weight='weight')
+
+
+def make_normalized_tpm_from_flow_sps_on_intersections(graph, sp_list):
+    """Using the flow count on each path, we calculate the transition possibility from a node to other."""
+
+    # To make the tpm, we will check each sp to count the number of jumps from each node to other
+    size = len(graph.nodes)
+    probs = [[0 for x in range(size)] for y in range(size)]
+    print(probs)
+    for sp in sp_list:
+        for k in range(0, (len(sp) - 1)):
+            probs[sp[k]][sp[k + 1]] += 1
+    print(probs)
+
+    # now sum of each row must be 1. so for non-zeroes, we normalize and if not, the probs[i][i] = 1
+    for i in range(size):
+        s = sum(probs[i])
+        if s != 0:
+            for j in range(size):
+                probs[i][j] /= s
+        else:
+            # we have a 0 row
+            probs[i][i] = 1.0
+    print(probs)
+    return probs
+
+
 def cost_calc(graph, flow_list=None, avg_speed=1, num_lines=1, num_cars=0):
-    """main run function. returns the calculated costs after creating the TPM"""
+    """main run function for iterations. returns the calculated costs on each iter using the CTMC it creates."""
 
     global road_lens
 
@@ -35,10 +66,16 @@ def cost_calc(graph, flow_list=None, avg_speed=1, num_lines=1, num_cars=0):
         return None
 
     new_edge_costs = []
+    sp_list = []
 
-    # TODO first, the shortest path for each flow is found
+    # First, the shortest path for each flow is found
+    for flow in flow_list:
+        src, dst = flow
+        sp_list.append(find_shortest_path(graph, src, dst))
+    print("The sp for each flow:", sp_list)
 
-    # TODO then, assuming all flows going on SPs, we can make the transition probability matrix.
+    # Then, assuming all flows going on SPs, we can make the transition probability matrix.
+    tpm = make_normalized_tpm_from_flow_sps_on_intersections(graph, sp_list)
 
     # TODO make TPM dual, to see from which road we go to which one (traffic flows), like paper 1 proposed.
 
@@ -59,7 +96,7 @@ if __name__ == '__main__':
     n = [0, 1, 2, 3, 4, 5]
 
     # Edges of the city graph, the roads.
-    e = [(0, 1, 8), (2, 3, 5), (4, 1, 3), (3, 1, 5), (4, 5, 1)]
+    e = [(0, 1, 8), (2, 3, 5), (4, 1, 3), (3, 1, 5), (4, 5, 1), (5, 1, 1), (0, 5, 4), (5, 2, 3)]
 
     # create city graph
     city_graph = setup_graph(n, e)
@@ -71,7 +108,7 @@ if __name__ == '__main__':
 
     # List of flows in the city, defined by a pair of nodes, indicating src & dst.
     # This list is also hard-coded, could have been taken as input.
-    city_flow_list = [(0, 1), (2, 1), (4, 5)]
+    city_flow_list = [(0, 1), (2, 1), (4, 1), (5, 2)]
 
     # Road lengths are to be copied. they are the initial values to road weights
     # (weights change later, thus the need of initial copy)
@@ -80,10 +117,9 @@ if __name__ == '__main__':
     prev_avg_cost = None
     while True:
         new_costs = cost_calc(graph=city_graph, flow_list=city_flow_list, avg_speed=50, num_lines=1)
-        if new_costs is None:
+        if new_costs is None or len(new_costs) == 0:
             print("Something went WRONG")
             break
-
         # The average cost used for checking convergence
         new_avg_cost = sum(new_costs) / len(new_costs)
         if prev_avg_cost:
