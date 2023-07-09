@@ -50,7 +50,6 @@ def cost_calc(graph, flow_list=None, avg_speed=1, num_lines=1, num_cars=0):
 
     # TODO return new costs for the next iteration.
 
-
     return new_edge_costs
 
 
@@ -78,7 +77,19 @@ if __name__ == '__main__':
     # (weights change later, thus the need of initial copy)
     road_lens = [i[2] for i in e]
 
-    new_costs = cost_calc(graph=city_graph, flow_list=city_flow_list, avg_speed=50, num_lines=1)
-    if new_costs is None:
-        print("we lost")
+    prev_avg_cost = None
+    while True:
+        new_costs = cost_calc(graph=city_graph, flow_list=city_flow_list, avg_speed=50, num_lines=1)
+        if new_costs is None:
+            print("Something went WRONG")
+            break
+
+        # The average cost used for checking convergence
+        new_avg_cost = sum(new_costs) / len(new_costs)
+        if prev_avg_cost:
+            # The default no.isclose tolerance is used, could be set o.w. if desired by setting the input parameters.
+            np.isclose(prev_avg_cost, new_avg_cost)
+            break
+        prev_avg_cost = new_avg_cost
+
     print(new_costs)
