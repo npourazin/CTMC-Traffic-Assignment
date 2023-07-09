@@ -1,5 +1,6 @@
 import networkx as nx
 from matplotlib import pyplot as plt
+import numpy as np
 
 
 def setup_graph(nodes, edges):
@@ -34,6 +35,22 @@ def cost_calc(graph, flow_list=None, avg_speed=1, num_lines=1, num_cars=0):
         return None
 
     new_edge_costs = []
+
+    # TODO first, the shortest path for each flow is found
+
+    # TODO then, assuming all flows going on SPs, we can make the transition probability matrix.
+
+    # TODO make TPM dual, to see from which road we go to which one (traffic flows), like paper 1 proposed.
+
+    # TODO normalize travel times to fill out the new tpm like paper 2 proposed.
+
+    # TODO find steady states (there might not be any, so approx it).
+
+    # TODO calculate utility functions for the state.
+
+    # TODO return new costs for the next iteration.
+
+
     return new_edge_costs
 
 
