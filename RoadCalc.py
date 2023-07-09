@@ -19,6 +19,24 @@ def draw_graph(graph):
     plt.savefig("graph.png")
 
 
+def cost_calc(graph, flow_list=None, avg_speed=1, num_lines=1, num_cars=0):
+    """main run function. returns the calculated costs after creating the TPM"""
+
+    global road_lens
+
+    # Validate input lists
+    if flow_list:
+        num_cars = len(flow_list)
+    else:
+        return None
+
+    if graph is None:
+        return None
+
+    new_edge_costs = []
+    return new_edge_costs
+
+
 if __name__ == '__main__':
     # For ease of use, nodes and edges are hard coded.
     # Nodes of the city graph, the intersections between the roads.
@@ -34,3 +52,16 @@ if __name__ == '__main__':
 
     # show the city graph
     draw_graph(city_graph)
+
+    # List of flows in the city, defined by a pair of nodes, indicating src & dst.
+    # This list is also hard-coded, could have been taken as input.
+    city_flow_list = [(0, 1), (2, 1), (4, 5)]
+
+    # Road lengths are to be copied. they are the initial values to road weights
+    # (weights change later, thus the need of initial copy)
+    road_lens = [i[2] for i in e]
+
+    new_costs = cost_calc(graph=city_graph, flow_list=city_flow_list, avg_speed=50, num_lines=1)
+    if new_costs is None:
+        print("we lost")
+    print(new_costs)
