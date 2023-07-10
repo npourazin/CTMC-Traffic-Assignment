@@ -1,6 +1,9 @@
+import math
 import networkx as nx
 from matplotlib import pyplot as plt
 import numpy as np
+import scipy as sp
+from scipy import linalg as LA
 
 
 def setup_graph(nodes, edges):
@@ -103,6 +106,43 @@ def make_new_tpm_with_tt_values(tpm):
     return new_probs
 
 
+def find_the_index_of_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+
+def find_steady_state(tpm):
+    """The steady state for the given TPM is found."""
+    # one of the methods is to find eigen values and vectors
+    # (A - I)v = 0
+    eig_val, eig_vec = LA.eig(tpm, left=True, right=False)
+    eig_vec = eig_vec.T
+    idx = find_the_index_of_nearest(eig_val, 1)
+
+    print("-----------------------")
+    print(eig_val)
+    print("-----------------------")
+    print(eig_vec)
+
+    if math.isclose(eig_val[idx], 1, abs_tol=0.001, rel_tol=0.001):
+        vec = eig_vec[idx]
+        print(eig_val[idx])
+        print(eig_vec[idx])
+    else:
+        print("No steady state! No eigen value is 1")
+        return None
+
+    steady_state = []
+    if len(vec) == 0:
+        print("No steady state!")
+        return None
+    else:
+        state = (vec / np.sum(vec))[0]
+
+    return steady_state
+
+
 def cost_calc(graph, flow_list=None, avg_speed=1, num_lanes=1, num_cars=0):
     """main run function for iterations. returns the calculated costs on each iter using the CTMC it creates."""
 
@@ -140,7 +180,9 @@ def cost_calc(graph, flow_list=None, avg_speed=1, num_lanes=1, num_cars=0):
     print(new_tpm_with_tt)
     # todo: check the previously empty rows later
 
-    # TODO find steady states (there might not be any, so approx it).
+    # Find steady states (there might not be any, so maybe(?) approx it).
+    initial_times = find_steady_state(new_tpm_with_tt)
+    print(initial_times)
 
     # TODO calculate utility functions for the state.
 
