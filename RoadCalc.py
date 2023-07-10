@@ -81,6 +81,28 @@ def make_dual_graph_and_tpm(graph, tpm):
     return dual_graph, new_probs
 
 
+def make_new_tpm_with_tt_values(tpm):
+    global tt
+
+    if len(tpm) == 0:
+        print("TPM thrown with len 0")
+        return tpm
+    if len(tpm) != len(tpm[0]):
+        print("TPM not symmetric.")
+        return tpm
+
+    new_probs = [[0 for x in range(len(tpm))] for y in range(len(tpm))]
+    for i in range(len(tpm)):
+        new_probs[i][i] = (tt[i] - 1) / (tt[i])
+
+    for i in range(len(tpm)):
+        for j in range(len(tpm)):
+            if i != j:
+                new_probs[i][j] = (1 - new_probs[i][i]) * tpm[i][j]
+
+    return new_probs
+
+
 def cost_calc(graph, flow_list=None, avg_speed=1, num_lanes=1, num_cars=0):
     """main run function for iterations. returns the calculated costs on each iter using the CTMC it creates."""
 
@@ -109,10 +131,14 @@ def cost_calc(graph, flow_list=None, avg_speed=1, num_lanes=1, num_cars=0):
 
     # Made the graph dual, to see from which road we go to which one (traffic flows), like paper 1 proposed.
     dual_graph, new_tpm = make_dual_graph_and_tpm(graph, tpm)
-    draw_graph(dual_graph)
-    print(new_tpm)
+    # draw_graph(dual_graph)
+    # print(new_tpm)
 
-    # TODO normalize travel times to fill out the new tpm like paper 2 proposed.
+    # normalized travel times once in the main function,
+    # Now we use it to fill out the new tpm like paper 1 and 2 proposed.
+    new_tpm_with_tt = make_new_tpm_with_tt_values(new_tpm)
+    print(new_tpm_with_tt)
+    # todo: check the previously empty rows later
 
     # TODO find steady states (there might not be any, so approx it).
 
@@ -151,6 +177,11 @@ if __name__ == '__main__':
     # Road lengths are to be copied. They are the initial values to road weights.
     # (weights change later, thus the need of initial copy)
     road_lens = [i[2] for i in e]
+
+    # The road lengths are used, to create a relatively normalized list of travel times .
+    # (i.e. the smallest is set to 1 and all are scaled relative to that)
+    tt = [x / avg_car_speed for x in road_lens]
+    tt = [x / min(tt) for x in tt]
 
     prev_avg_cost = None
     while True:
