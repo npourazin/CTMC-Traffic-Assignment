@@ -72,9 +72,9 @@ def make_dual_graph_and_tpm(graph, tpm):
         for j in range(len(edges)):
             s2, d2 = edges[j]
             if d1 == s2:
-                ne = (edges[i], edges[j], tpm[s1][d1] + tpm[s2][d2])
+                ne = (edges[i], edges[j], tpm[s1][d1] * tpm[s2][d2])
                 dual_edge_list.append(ne)
-                new_probs[i][j] = tpm[s1][d1] + tpm[s2][d2]
+                new_probs[i][j] = tpm[s1][d1] * tpm[s2][d2]
 
     dual_graph = setup_graph(edges, dual_edge_list)
     # draw_graph(dual_graph)
